@@ -161,14 +161,21 @@
     }
 
     .team-logo {
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.2);
+    }
+
+    .team-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
     }
 
     .team-name {
@@ -388,7 +395,11 @@
           <div class="match-details">
             <div class="teams-container">
               <div class="team team-1">
-                <div class="team-logo">${teamLogos[match.equipe1] || '⚽'}</div>
+                <div class="team-logo">
+                    ${match.equipe1Logo
+                    ? `<img src="${match.equipe1Logo}" alt="${match.equipe1}" width="36" height="36" loading="lazy">`
+                    : '⚽'}
+                </div>
                 <div class="team-name">${match.equipe1}</div>
               </div>
               <div class="score-section">
@@ -405,7 +416,11 @@
                 `}
               </div>
               <div class="team team-2">
-                <div class="team-logo">${teamLogos[match.equipe2] || '⚽'}</div>
+                <div class="team-logo">
+                    ${match.equipe2Logo
+                    ? `<img src="${match.equipe2Logo}" alt="${match.equipe2}" width="36" height="36" loading="lazy">`
+                    : '⚽'}
+                </div>
                 <div class="team-name">${match.equipe2}</div>
               </div>
             </div>
@@ -487,6 +502,3 @@
   </script>
 </body>
 </html>
-
-
-
