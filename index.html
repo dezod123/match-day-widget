@@ -161,21 +161,21 @@
     }
 
     .team-logo {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,255,255,0.2);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.2);
     }
 
     .team-logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
     }
 
     .team-name {
@@ -315,6 +315,7 @@
     let currentMatchData = {};
     let selectedJournee = "1";
 
+    // Optional emoji fallbacks (unused when logos provided)
     const teamLogos = {
       "Blue Lock": "🔵",
       "Royal Academy": "👑",
@@ -325,6 +326,7 @@
       "UST": "⚽"
     };
 
+    // --- Status helper (uses gagnant/forfait/nul) ---
     function getMatchStatus(match) {
       if (!match.equipeGagnante || match.equipeGagnante === "undefined") {
         return 'SCHEDULED';
@@ -334,17 +336,7 @@
       return 'FINISHED';
     }
 
-    function getMatchResult(match) {
-      const status = getMatchStatus(match);
-      if (status === 'SCHEDULED' || match.forfait) {
-        return { team1Score: '-', team2Score: '-' };
-      }
-      return {
-        team1Score: match.egNbButs,
-        team2Score: match.epNbButs
-      };
-    }
-
+    // --- Date formatting helper ---
     function formatDate(dateInput) {
       const s = (dateInput || '').trim();
       const looksISO = /^\d{4}-\d{2}-\d{2}/.test(s);
@@ -361,9 +353,96 @@
       return s || 'Date à venir';
     }
 
-    function createMatchCard(match) {
+    // ---------- NEW: winner/loser alignment logic (no Velo changes needed) ----------
+    function norm(val) {
+      if (val == null) return '';
+      if (typeof val === 'object') {
+        // Try common fields from Wix references
+        return (val.title || val.name || val.value || '').toString().trim().toLowerCase();
+      }
+      return String(val).trim().toLowerCase();
+    }
+
+    function displayName(val) {
+      if (val == null) return '';
+      if (typeof val === 'object') {
+        return (val.title || val.name || val.value || '').toString().trim();
+      }
+      return String(val).trim();
+    }
+
+    function isSameTeam(ref, nameCandidate) {
+      const nRef = norm(ref);
+      const nName = norm(nameCandidate);
+      if (!nRef && !nName) return false;
+      return nRef === nName;
+    }
+
+    function pickLogoFor(ref, match) {
+      // If ref resolves to equipe1 or equipe2 title, use their logos
+      if (isSameTeam(ref, match.equipe1)) return match.equipe1Logo || '';
+      if (isSameTeam(ref, match.equipe2)) return match.equipe2Logo || '';
+      // Try direct title extraction and compare again
+      if (norm(displayName(ref)) === norm(match.equipe1)) return match.equipe1Logo || '';
+      if (norm(displayName(ref)) === norm(match.equipe2)) return match.equipe2Logo || '';
+      return '';
+    }
+
+    function pickNameFor(ref, match) {
+      if (isSameTeam(ref, match.equipe1)) return match.equipe1;
+      if (isSameTeam(ref, match.equipe2)) return match.equipe2;
+      const d = displayName(ref);
+      if (d) return d;
+      return 'Équipe';
+    }
+
+    function computeSides(match) {
       const status = getMatchStatus(match);
-      const result = getMatchResult(match);
+
+      // Defaults (original order)
+      let leftTeamName = match.equipe1;
+      let rightTeamName = match.equipe2;
+      let leftTeamLogo = match.equipe1Logo || '';
+      let rightTeamLogo = match.equipe2Logo || '';
+      let leftGoals = '-';
+      let rightGoals = '-';
+
+      if (status === 'FINISHED') {
+        // Winner on the left, loser on the right
+        leftTeamName = pickNameFor(match.equipeGagnante, match);
+        rightTeamName = pickNameFor(match.equipePerdante, match);
+        leftTeamLogo = pickLogoFor(match.equipeGagnante, match);
+        rightTeamLogo = pickLogoFor(match.equipePerdante, match);
+
+        // Use provided winner/loser goals
+        leftGoals = (match.egNbButs ?? match.egNbButs === 0) ? match.egNbButs : '-';
+        rightGoals = (match.epNbButs ?? match.epNbButs === 0) ? match.epNbButs : '-';
+      } else if (status === 'DRAW') {
+        // Keep original order; show scores as recorded
+        leftGoals = (match.egNbButs ?? match.egNbButs === 0) ? match.egNbButs : '-';
+        rightGoals = (match.epNbButs ?? match.epNbButs === 0) ? match.epNbButs : '-';
+      } else {
+        // Scheduled or Forfeit → show dashes
+        leftGoals = rightGoals = '-';
+      }
+
+      return {
+        status,
+        leftTeamName, rightTeamName,
+        leftTeamLogo, rightTeamLogo,
+        leftGoals, rightGoals
+      };
+    }
+    // -------------------------------------------------------------------------------
+
+    // --- Card builder (uses aligned sides) ---
+    function createMatchCard(match) {
+      const {
+        status,
+        leftTeamName, rightTeamName,
+        leftTeamLogo, rightTeamLogo,
+        leftGoals, rightGoals
+      } = computeSides(match);
 
       const statusText = {
         'SCHEDULED': '',
@@ -371,6 +450,23 @@
         'DRAW': 'Match nul',
         'FINISHED': 'Terminé'
       }[status] || '';
+
+      const scoreHtml = (status === 'SCHEDULED' || match.forfait)
+        ? `<div class="score-display">
+             <span class="score pending">- - -</span>
+           </div>`
+        : `<div class="score-display">
+             <span class="score">${leftGoals}</span>
+             <span class="separator">-</span>
+             <span class="score">${rightGoals}</span>
+           </div>`;
+
+      const leftLogoHtml = leftTeamLogo
+        ? `<img src="${leftTeamLogo}" alt="${leftTeamName}" width="36" height="36" loading="lazy">`
+        : '⚽';
+      const rightLogoHtml = rightTeamLogo
+        ? `<img src="${rightTeamLogo}" alt="${rightTeamName}" width="36" height="36" loading="lazy">`
+        : '⚽';
 
       return `
         <div class="match-card">
@@ -392,38 +488,26 @@
               </div>
             </div>
           </div>
+
           <div class="match-details">
             <div class="teams-container">
+              <!-- LEFT = Gagnant (if finished), else equipe1 -->
               <div class="team team-1">
-                <div class="team-logo">
-                    ${match.equipe1Logo
-                    ? `<img src="${match.equipe1Logo}" alt="${match.equipe1}" width="36" height="36" loading="lazy">`
-                    : '⚽'}
-                </div>
-                <div class="team-name">${match.equipe1}</div>
+                <div class="team-logo">${leftLogoHtml}</div>
+                <div class="team-name">${leftTeamName}</div>
               </div>
+
               <div class="score-section">
-                ${status === 'SCHEDULED' ? `
-                    <div class="score-display">
-                        <span class="score pending">- - -</span>
-                    </div>
-                ` : `
-                    <div class="score-display">
-                        <span class="score">${result.team1Score}</span>
-                        <span class="separator">-</span>
-                        <span class="score">${result.team2Score}</span>
-                    </div>
-                `}
+                ${scoreHtml}
               </div>
+
+              <!-- RIGHT = Perdant (if finished), else equipe2 -->
               <div class="team team-2">
-                <div class="team-logo">
-                    ${match.equipe2Logo
-                    ? `<img src="${match.equipe2Logo}" alt="${match.equipe2}" width="36" height="36" loading="lazy">`
-                    : '⚽'}
-                </div>
-                <div class="team-name">${match.equipe2}</div>
+                <div class="team-logo">${rightLogoHtml}</div>
+                <div class="team-name">${rightTeamName}</div>
               </div>
             </div>
+
             ${status !== 'SCHEDULED' ? `
               <div class="status-container">
                 <span class="status-badge status-${status.toLowerCase()}">
@@ -436,13 +520,14 @@
       `;
     }
 
+    // --- Rendering & data flow ---
     function renderWidget() {
       const journees = Object.keys(currentMatchData).sort((a, b) => Number(a) - Number(b));
       let currentMatches = currentMatchData[selectedJournee] || [];
       currentMatches = currentMatches.sort((a, b) => {
-          const ordreA = a.ordreDate ?? Number.MAX_SAFE_INTEGER;
-          const ordreB = b.ordreDate ?? Number.MAX_SAFE_INTEGER;
-          return ordreA - ordreB;
+        const ordreA = a.ordreDate ?? Number.MAX_SAFE_INTEGER;
+        const ordreB = b.ordreDate ?? Number.MAX_SAFE_INTEGER;
+        return ordreA - ordreB;
       });
 
       const content = `
@@ -451,7 +536,7 @@
           <div class="journee-buttons">
             ${journees.map(j => {
               const first = (currentMatchData[j] && currentMatchData[j][0]) || {};
-              const label = first.date ? formatDate(first.date) : `Journée ${j}`;
+              const label = first.date ? formatDate(first.date) : \`Journée \${j}\`;
               return `
                 <button 
                   class="journee-btn ${selectedJournee === j ? 'active' : ''}"
