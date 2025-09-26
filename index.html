@@ -161,21 +161,21 @@
     }
 
     .team-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.2);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.2);
     }
 
     .team-logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
     }
 
     .team-name {
@@ -315,7 +315,6 @@
     let currentMatchData = {};
     let selectedJournee = "1";
 
-    // (Optional) Emoji fallbacks
     const teamLogos = {
       "Blue Lock": "🔵",
       "Royal Academy": "👑",
@@ -326,8 +325,6 @@
       "UST": "⚽"
     };
 
-    /* -------------------- Helpers -------------------- */
-
     function getMatchStatus(match) {
       if (!match.equipeGagnante || match.equipeGagnante === "undefined") {
         return 'SCHEDULED';
@@ -335,6 +332,17 @@
       if (match.forfait) return 'FORFEIT';
       if (match.nul) return 'DRAW';
       return 'FINISHED';
+    }
+
+    function getMatchResult(match) {
+      const status = getMatchStatus(match);
+      if (status === 'SCHEDULED' || match.forfait) {
+        return { team1Score: '-', team2Score: '-' };
+      }
+      return {
+        team1Score: match.egNbButs,
+        team2Score: match.epNbButs
+      };
     }
 
     function formatDate(dateInput) {
@@ -353,94 +361,9 @@
       return s || 'Date à venir';
     }
 
-    // Normalize and display helpers (for matching gagnant/perdant to equipe1/equipe2)
-    function norm(val) {
-      if (val == null) return '';
-      if (typeof val === 'object') {
-        return (val.title || val.name || val.value || '').toString().trim().toLowerCase();
-      }
-      return String(val).trim().toLowerCase();
-    }
-
-    function displayName(val) {
-      if (val == null) return '';
-      if (typeof val === 'object') {
-        return (val.title || val.name || val.value || '').toString().trim();
-      }
-      return String(val).trim();
-    }
-
-    function isSameTeam(ref, nameCandidate) {
-      const nRef = norm(ref);
-      const nName = norm(nameCandidate);
-      if (!nRef && !nName) return false;
-      return nRef === nName;
-    }
-
-    function pickLogoFor(ref, match) {
-      if (isSameTeam(ref, match.equipe1)) return match.equipe1Logo || '';
-      if (isSameTeam(ref, match.equipe2)) return match.equipe2Logo || '';
-      if (norm(displayName(ref)) === norm(match.equipe1)) return match.equipe1Logo || '';
-      if (norm(displayName(ref)) === norm(match.equipe2)) return match.equipe2Logo || '';
-      return '';
-    }
-
-    function pickNameFor(ref, match) {
-      if (isSameTeam(ref, match.equipe1)) return match.equipe1;
-      if (isSameTeam(ref, match.equipe2)) return match.equipe2;
-      const d = displayName(ref);
-      if (d) return d;
-      return 'Équipe';
-    }
-
-    // Build left/right sides for display: winner (left) vs loser (right)
-    function computeSides(match) {
-      const status = getMatchStatus(match);
-
-      // Defaults (original order)
-      let leftTeamName = match.equipe1;
-      let rightTeamName = match.equipe2;
-      let leftTeamLogo = match.equipe1Logo || '';
-      let rightTeamLogo = match.equipe2Logo || '';
-      let leftGoals = '-';
-      let rightGoals = '-';
-
-      if (status === 'FINISHED') {
-        // winner on the left, loser on the right
-        leftTeamName = pickNameFor(match.equipeGagnante, match);
-        rightTeamName = pickNameFor(match.equipePerdante, match);
-        leftTeamLogo = pickLogoFor(match.equipeGagnante, match);
-        rightTeamLogo = pickLogoFor(match.equipePerdante, match);
-
-        // goals aligned to winner/loser
-        leftGoals = (match.egNbButs ?? match.egNbButs === 0) ? match.egNbButs : '-';
-        rightGoals = (match.epNbButs ?? match.epNbButs === 0) ? match.epNbButs : '-';
-      } else if (status === 'DRAW') {
-        // original order; show scores as recorded
-        leftGoals = (match.egNbButs ?? match.egNbButs === 0) ? match.egNbButs : '-';
-        rightGoals = (match.epNbButs ?? match.epNbButs === 0) ? match.epNbButs : '-';
-      } else {
-        // SCHEDULED / FORFEIT → dashes
-        leftGoals = rightGoals = '-';
-      }
-
-      return {
-        status,
-        leftTeamName, rightTeamName,
-        leftTeamLogo, rightTeamLogo,
-        leftGoals, rightGoals
-      };
-    }
-
-    /* -------------------- Card Builder -------------------- */
-
     function createMatchCard(match) {
-      const {
-        status,
-        leftTeamName, rightTeamName,
-        leftTeamLogo, rightTeamLogo,
-        leftGoals, rightGoals
-      } = computeSides(match);
+      const status = getMatchStatus(match);
+      const result = getMatchResult(match);
 
       const statusText = {
         'SCHEDULED': '',
@@ -449,123 +372,114 @@
         'FINISHED': 'Terminé'
       }[status] || '';
 
-      const scoreHtml = (status === 'SCHEDULED' || match.forfait)
-        ? '<div class="score-display"><span class="score pending">- - -</span></div>'
-        : '<div class="score-display">'
-            + '<span class="score">' + leftGoals + '</span>'
-            + '<span class="separator">-</span>'
-            + '<span class="score">' + rightGoals + '</span>'
-          + '</div>';
-
-      const leftLogoHtml = leftTeamLogo
-        ? '<img src="' + leftTeamLogo + '" alt="' + leftTeamName + '" width="36" height="36" loading="lazy">'
-        : '⚽';
-      const rightLogoHtml = rightTeamLogo
-        ? '<img src="' + rightTeamLogo + '" alt="' + rightTeamName + '" width="36" height="36" loading="lazy">'
-        : '⚽';
-
-      return ''
-        + '<div class="match-card">'
-          + '<div class="match-header">'
-            + '<div class="match-info">'
-              + '<div class="date-info">'
-                + '<span>📅</span>'
-                + '<span>' + formatDate(match.date) + '</span>'
-              + '</div>'
-              + '<div class="time-venue">'
-                + '<div class="time-info">'
-                  + '<span>🕐</span>'
-                  + '<span>' + (match.heure || '') + '</span>'
-                + '</div>'
-                + '<div class="venue-info">'
-                  + '<span>📍</span>'
-                  + '<span>' + (match.terrain || '') + '</span>'
-                + '</div>'
-              + '</div>'
-            + '</div>'
-          + '</div>'
-
-          + '<div class="match-details">'
-            + '<div class="teams-container">'
-
-              // LEFT = winner (if finished), else equipe1
-              + '<div class="team team-1">'
-                + '<div class="team-logo">' + leftLogoHtml + '</div>'
-                + '<div class="team-name">' + leftTeamName + '</div>'
-              + '</div>'
-
-              + '<div class="score-section">' + scoreHtml + '</div>'
-
-              // RIGHT = loser (if finished), else equipe2
-              + '<div class="team team-2">'
-                + '<div class="team-logo">' + rightLogoHtml + '</div>'
-                + '<div class="team-name">' + rightTeamName + '</div>'
-              + '</div>'
-
-            + '</div>'
-
-            + (status !== 'SCHEDULED'
-              ? '<div class="status-container">'
-                  + '<span class="status-badge status-' + status.toLowerCase() + '">'
-                    + statusText
-                  + '</span>'
-                + '</div>'
-              : '')
-
-          + '</div>'
-        + '</div>';
+      return `
+        <div class="match-card">
+          <div class="match-header">
+            <div class="match-info">
+              <div class="date-info">
+                <span>📅</span>
+                <span>${formatDate(match.date)}</span>
+              </div>
+              <div class="time-venue">
+                <div class="time-info">
+                  <span>🕐</span>
+                  <span>${match.heure}</span>
+                </div>
+                <div class="venue-info">
+                  <span>📍</span>
+                  <span>${match.terrain}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="match-details">
+            <div class="teams-container">
+              <div class="team team-1">
+                <div class="team-logo">
+                    ${match.equipe1Logo
+                    ? `<img src="${match.equipe1Logo}" alt="${match.equipe1}" width="36" height="36" loading="lazy">`
+                    : '⚽'}
+                </div>
+                <div class="team-name">${match.equipe1}</div>
+              </div>
+              <div class="score-section">
+                ${status === 'SCHEDULED' ? `
+                    <div class="score-display">
+                        <span class="score pending">- - -</span>
+                    </div>
+                ` : `
+                    <div class="score-display">
+                        <span class="score">${result.team1Score}</span>
+                        <span class="separator">-</span>
+                        <span class="score">${result.team2Score}</span>
+                    </div>
+                `}
+              </div>
+              <div class="team team-2">
+                <div class="team-logo">
+                    ${match.equipe2Logo
+                    ? `<img src="${match.equipe2Logo}" alt="${match.equipe2}" width="36" height="36" loading="lazy">`
+                    : '⚽'}
+                </div>
+                <div class="team-name">${match.equipe2}</div>
+              </div>
+            </div>
+            ${status !== 'SCHEDULED' ? `
+              <div class="status-container">
+                <span class="status-badge status-${status.toLowerCase()}">
+                  ${statusText}
+                </span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
     }
 
-    /* -------------------- Rendering -------------------- */
-
     function renderWidget() {
-      const journees = Object.keys(currentMatchData).sort(function(a, b) { return Number(a) - Number(b); });
+      const journees = Object.keys(currentMatchData).sort((a, b) => Number(a) - Number(b));
       let currentMatches = currentMatchData[selectedJournee] || [];
-      currentMatches = currentMatches.sort(function(a, b) {
-        const ordreA = (a.ordreDate !== undefined && a.ordreDate !== null) ? a.ordreDate : Number.MAX_SAFE_INTEGER;
-        const ordreB = (b.ordreDate !== undefined && b.ordreDate !== null) ? b.ordreDate : Number.MAX_SAFE_INTEGER;
-        return ordreA - ordreB;
+      currentMatches = currentMatches.sort((a, b) => {
+          const ordreA = a.ordreDate ?? Number.MAX_SAFE_INTEGER;
+          const ordreB = b.ordreDate ?? Number.MAX_SAFE_INTEGER;
+          return ordreA - ordreB;
       });
 
-      var buttonsHtml = '';
-      for (var i = 0; i < journees.length; i++) {
-        var j = journees[i];
-        var first = (currentMatchData[j] && currentMatchData[j][0]) || {};
-        var label = first.date ? formatDate(first.date) : ('Journée ' + j);
-        buttonsHtml += ''
-          + '<button class="journee-btn ' + (selectedJournee === j ? 'active' : '') + '"'
-          + ' onclick="selectJournee(\'' + j + '\')">'
-          + label
-          + '</button>';
-      }
-
-      var matchesHtml = '';
-      if (currentMatches.length > 0) {
-        for (var k = 0; k < currentMatches.length; k++) {
-          matchesHtml += createMatchCard(currentMatches[k]);
-        }
-      } else {
-        matchesHtml = ''
-          + '<div class="no-matches">'
-            + '<div class="no-matches-icon">⚽</div>'
-            + '<h3>Aucun match programmé</h3>'
-            + '<p>Revenez plus tard pour voir les prochains matchs.</p>'
-          + '</div>';
-      }
-
-      var content = ''
-        + '<div class="journee-nav">'
-          + '<span class="nav-label">Date :</span>'
-          + '<div class="journee-buttons">' + buttonsHtml + '</div>'
-        + '</div>'
-        + '<div class="matches-container">' + matchesHtml + '</div>';
+      const content = `
+        <div class="journee-nav">
+          <span class="nav-label">Date :</span>
+          <div class="journee-buttons">
+            ${journees.map(j => {
+              const first = (currentMatchData[j] && currentMatchData[j][0]) || {};
+              const label = first.date ? formatDate(first.date) : `Journée ${j}`;
+              return `
+                <button 
+                  class="journee-btn ${selectedJournee === j ? 'active' : ''}"
+                  onclick="selectJournee('${j}')"
+                >
+                  ${label}
+                </button>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="matches-container">
+          ${currentMatches.length > 0 ? 
+            currentMatches.map(match => createMatchCard(match)).join('') :
+            `<div class="no-matches">
+              <div class="no-matches-icon">⚽</div>
+              <h3>Aucun match programmé</h3>
+              <p>Revenez plus tard pour voir les prochains matchs.</p>
+            </div>`
+          }
+        </div>
+      `;
 
       document.getElementById('widget-content').innerHTML = content;
     }
 
     function updateMatchData(data) {
-      currentMatchData = data || {};
-      const journees = Object.keys(currentMatchData).sort(function(a, b) { return Number(a) - Number(b); });
+      currentMatchData = data;
+      const journees = Object.keys(data).sort((a, b) => Number(a) - Number(b));
       if (journees.length > 0) {
         selectedJournee = journees[0];
       }
@@ -579,9 +493,9 @@
 
     window.selectJournee = selectJournee;
 
-    // Listen for Wix postMessage (payload shape unchanged)
+    // Listen for Wix postMessage
     window.addEventListener('message', function(event) {
-      if (event && event.data && typeof event.data === 'object' && event.data.type === 'SET_MATCH_DATA') {
+      if (event.data && typeof event.data === 'object' && event.data.type === 'SET_MATCH_DATA') {
         updateMatchData(event.data.payload);
       }
     }, false);
