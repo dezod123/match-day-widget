@@ -34,10 +34,22 @@
       background: rgba(255,255,255,0.12); border-radius: 10px; padding: 6px 10px;
     }
     .league-select label { font-size: 14px; color: #e5e7eb; }
+    /* Make the open dropdown readable across browsers */
     .league-select select {
-      appearance: none; border: none; outline: none;
-      background: rgba(255,255,255,0.2); color: #fff;
-      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+      color: #fff;                 /* text when closed */
+      background: rgba(255,255,255,0.2);
+      outline: none;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      color-scheme: dark;          /* helps on Chromium/Firefox */
+    }
+    .league-select select option {
+      background-color: #0b1220;   /* dark menu */
+      color: #f8fafc;              /* light text */
+    }
+    .league-select select:focus {
+      box-shadow: 0 0 0 2px rgba(96,165,250,.8);
     }
 
     /* Journee nav, cards, etc. */
@@ -87,6 +99,12 @@
       .teams-container { flex-direction: column; gap: 16px; }
       .score-section { margin: 16px 0; }
       .team-2 { flex-direction: row-reverse; justify-content: space-between; }
+    }
+    @supports (-webkit-touch-callout: none) {
+      .league-select select option {
+        background-color: #ffffff; /* fallback to light menu */
+        color: #111827;            /* dark text for contrast */
+      }
     }
   </style>
 </head>
@@ -296,3 +314,4 @@
   </script>
 </body>
 </html>
+
