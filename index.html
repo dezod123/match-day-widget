@@ -6,305 +6,110 @@
   <title>Ligue de Soccer Joga Bonito</title>
   <style>
     /* Reset & Global Styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden; /* Removes iframe scrollbar */
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: transparent;
-      color: #f9fafb;
+      background: transparent; color: #f9fafb;
     }
 
-    /* Widget Container */
     .football-widget {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(8px);
-      border-radius: 16px;
+      max-width: 1000px; margin: 0 auto; padding: 20px;
+      background: rgba(255,255,255,0.05); backdrop-filter: blur(8px); border-radius: 16px;
     }
 
-    /* Header */
-    .widget-header {
-      margin-bottom: 32px;
+    .widget-header { margin-bottom: 16px; }
+    .top-row {
+      display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
     }
 
     .widget-title {
-      font-size: 32px;
-      font-weight: bold;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-      text-align: center;
+      font-size: 28px; font-weight: 700; display: flex; align-items: center; gap: 10px;
+    }
+    .widget-subtitle { color: #d1d5db; font-size: 14px; margin-top: 4px; }
+
+    /* League dropdown */
+    .league-select {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.12); border-radius: 10px; padding: 6px 10px;
+    }
+    .league-select label { font-size: 14px; color: #e5e7eb; }
+    .league-select select {
+      appearance: none; border: none; outline: none;
+      background: rgba(255,255,255,0.2); color: #fff;
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
     }
 
-    .title-icon {
-      margin-right: 12px;
-      font-size: 32px;
-    }
-
-    .widget-subtitle {
-      color: #d1d5db;
-      font-size: 14px;
-    }
-
-    /* Navigation */
-    .journee-nav {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-
-    .nav-label {
-      font-weight: 500;
-      color: #f9fafb;
-    }
-
-    .journee-buttons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
+    /* Journee nav, cards, etc. */
+    .journee-nav { display: flex; align-items: center; gap: 8px; margin: 16px 0 24px; flex-wrap: wrap; }
+    .nav-label { font-weight: 500; color: #f9fafb; }
+    .journee-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .journee-btn {
-      padding: 8px 16px;
-      border-radius: 12px;
-      border: none;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      background: rgba(255, 255, 255, 0.15);
-      color: #f9fafb;
-      transition: background 0.2s ease;
+      padding: 8px 16px; border-radius: 12px; border: none; font-size: 14px; font-weight: 500; cursor: pointer;
+      background: rgba(255,255,255,0.15); color: #f9fafb; transition: background 0.2s ease;
     }
+    .journee-btn:not(.active):hover { background: rgba(255,255,255,0.3); }
+    .journee-btn.active { background: #2563eb; color: #fff; box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
 
-    .journee-btn:not(.active):hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
+    .match-card { background: rgba(255,255,255,0.08); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 16px; transition: all 0.3s ease; }
+    .match-card:hover { background: rgba(255,255,255,0.12); }
+    .match-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f9fafb; }
+    .match-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #d1d5db; }
+    .time-venue { display: flex; gap: 16px; }
 
-    .journee-btn.active {
-      background: #2563eb;
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-    }
+    .match-details { padding: 20px 16px; }
+    .teams-container { display: flex; align-items: center; justify-content: space-between; }
+    .team { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .team-2 { justify-content: flex-end; flex-direction: row-reverse; }
+    .team-logo { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); }
+    .team-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .team-name { font-weight: 600; color: #f9fafb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-2 .team-name { text-align: right; }
 
-    /* Match Card */
-    .match-card {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      margin-bottom: 16px;
-      transition: all 0.3s ease;
-      padding: 0;
-    }
+    .score-section { margin: 0 32px; display: flex; align-items: center; justify-content: center; min-width: 80px; }
+    .score-display { display: flex; align-items: center; gap: 12px; }
+    .score { font-size: 32px; font-weight: bold; color: #fff; }
+    .score.pending { color: #9ca3af; letter-spacing: 2px; }
+    .separator { color: #9ca3af; font-size: 24px; }
 
-    .match-card:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
+    .status-container { display: flex; justify-content: center; margin-top: 16px; }
+    .status-badge { padding: 6px 14px; border-radius: 14px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; backdrop-filter: blur(6px); }
+    .status-finished { background: rgba(16,185,129,0.2); color: #10b981; }
+    .status-draw { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .status-forfeit { background: rgba(239,68,68,0.2); color: #ef4444; }
 
-    /* Card Header */
-    .match-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      color: #f9fafb;
-    }
+    .no-matches { text-align: center; padding: 48px 20px; color: #f9fafb; }
+    .no-matches-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+    .no-matches h3 { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+    .no-matches p { color: #d1d5db; }
 
-    .match-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      color: #d1d5db;
-    }
-
-    .time-venue {
-      display: flex;
-      gap: 16px;
-    }
-
-    /* Match Body */
-    .match-details {
-      padding: 20px 16px;
-    }
-
-    .teams-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* Teams */
-    .team {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .team-2 {
-      justify-content: flex-end;
-      flex-direction: row-reverse;
-    }
-
-    .team-logo {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,255,255,0.2);
-    }
-
-    .team-logo img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-    }
-
-    .team-name {
-      font-weight: 600;
-      color: #f9fafb;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .team-2 .team-name {
-      text-align: right;
-    }
-
-    /* Score Section */
-    .score-section {
-      margin: 0 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 80px;
-    }
-
-    .score-display {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .score {
-      font-size: 32px;
-      font-weight: bold;
-      color: #fff;
-    }
-
-    .score.pending {
-      color: #9ca3af;
-      letter-spacing: 2px;
-    }
-
-    .separator {
-      color: #9ca3af;
-      font-size: 24px;
-    }
-
-    /* Status Badge */
-    .status-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 16px;
-    }
-
-    .status-badge {
-      padding: 6px 14px;
-      border-radius: 14px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      backdrop-filter: blur(6px);
-    }
-
-    .status-finished {
-      background: rgba(16, 185, 129, 0.2);
-      color: #10b981;
-    }
-
-    .status-draw {
-      background: rgba(251, 191, 36, 0.2);
-      color: #fbbf24;
-    }
-
-    .status-forfeit {
-      background: rgba(239, 68, 68, 0.2);
-      color: #ef4444;
-    }
-
-    /* No Matches */
-    .no-matches {
-      text-align: center;
-      padding: 48px 20px;
-      color: #f9fafb;
-    }
-
-    .no-matches-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .no-matches h3 {
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .no-matches p {
-      color: #d1d5db;
-    }
-
-    /* Responsive Fix */
     @media (max-width: 768px) {
-      .teams-container {
-        flex-direction: column;
-        gap: 16px;
-      }
-      .score-section {
-        margin: 16px 0;
-      }
-      .team-2 {
-        flex-direction: row-reverse;
-        justify-content: space-between;
-      }
+      .teams-container { flex-direction: column; gap: 16px; }
+      .score-section { margin: 16px 0; }
+      .team-2 { flex-direction: row-reverse; justify-content: space-between; }
     }
   </style>
 </head>
 <body>
   <div class="football-widget">
     <div class="widget-header">
-      <h1 class="widget-title">
-        <span class="title-icon">👥</span>
-        Club Tomohawk 2025
-      </h1>
-      <p class="widget-subtitle">Calendrier et résultats</p>
+      <div class="top-row">
+        <div>
+          <h1 class="widget-title">
+            <span class="title-icon">👥</span>
+            <span id="leagueTitle">Club Tomohawk 2025</span>
+          </h1>
+          <p class="widget-subtitle" id="leagueSub">Calendrier et résultats</p>
+        </div>
+        <div class="league-select">
+          <label for="leagueSelect">Ligue :</label>
+          <select id="leagueSelect"></select>
+        </div>
+      </div>
     </div>
 
     <div id="widget-content">
       <div class="loading">
-        <div class="loading-spinner"></div>
         <h3>Chargement des matchs...</h3>
         <p>En attente des données depuis Wix</p>
       </div>
@@ -314,21 +119,44 @@
   <script>
     let currentMatchData = {};
     let selectedJournee = "1";
+    let leagues = [];            // [{id,label,div}]
+    let currentLeagueId = null;  // e.g., 'Tr1'
 
-    const teamLogos = {
-      "Blue Lock": "🔵",
-      "Royal Academy": "👑",
-      "Kelb United": "🐕",
-      "Leaf": "🍃",
-      "ESL": "⚽",
-      "CHAKS": "⚽",
-      "UST": "⚽"
-    };
+    function postToParent(msg) {
+      try { window.parent.postMessage(msg, '*'); } catch (_) {}
+    }
+
+    // Inform Wix we’re ready
+    window.addEventListener('load', () => {
+      postToParent({ type: 'IFRAME_READY' });
+    });
+
+    function populateLeagueDropdown() {
+      const sel = document.getElementById('leagueSelect');
+      sel.innerHTML = leagues.map(l => `<option value="${l.id}">${l.label}</option>`).join('');
+      if (currentLeagueId && leagues.find(l => l.id === currentLeagueId)) {
+        sel.value = currentLeagueId;
+      } else if (leagues.length) {
+        currentLeagueId = leagues[0].id;
+        sel.value = currentLeagueId;
+      }
+    }
+
+    document.getElementById('leagueSelect').addEventListener('change', (e) => {
+      currentLeagueId = e.target.value;
+      // Ask Wix for this league’s data
+      postToParent({ type: 'SELECT_LEAGUE', leagueId: currentLeagueId });
+      // Optimistic UI: show loading while waiting
+      document.getElementById('widget-content').innerHTML = `
+        <div class="no-matches">
+          <div class="no-matches-icon">⏳</div>
+          <h3>Chargement des matchs…</h3>
+          <p>Récupération des données pour la ligue sélectionnée.</p>
+        </div>`;
+    });
 
     function getMatchStatus(match) {
-      if (!match.equipeGagnante || match.equipeGagnante === "undefined") {
-        return 'SCHEDULED';
-      }
+      if (!match.equipeGagnante || match.equipeGagnante === "undefined") return 'SCHEDULED';
       if (match.forfait) return 'FORFEIT';
       if (match.nul) return 'DRAW';
       return 'FINISHED';
@@ -336,13 +164,8 @@
 
     function getMatchResult(match) {
       const status = getMatchStatus(match);
-      if (status === 'SCHEDULED' || match.forfait) {
-        return { team1Score: '-', team2Score: '-' };
-      }
-      return {
-        team1Score: match.egNbButs,
-        team2Score: match.epNbButs
-      };
+      if (status === 'SCHEDULED' || match.forfait) return { team1Score: '-', team2Score: '-' };
+      return { team1Score: match.egNbButs, team2Score: match.epNbButs };
     }
 
     function formatDate(dateInput) {
@@ -351,11 +174,7 @@
       if (looksISO) {
         const d = new Date(s);
         if (!isNaN(d)) {
-          return d.toLocaleDateString('fr-CA', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric'
-          });
+          return d.toLocaleDateString('fr-CA', { weekday: 'short', month: 'short', day: 'numeric' });
         }
       }
       return s || 'Date à venir';
@@ -364,31 +183,15 @@
     function createMatchCard(match) {
       const status = getMatchStatus(match);
       const result = getMatchResult(match);
-
-      const statusText = {
-        'SCHEDULED': '',
-        'FORFEIT': 'Forfait',
-        'DRAW': 'Match nul',
-        'FINISHED': 'Terminé'
-      }[status] || '';
-
+      const statusText = { SCHEDULED: '', FORFEIT: 'Forfait', DRAW: 'Match nul', FINISHED: 'Terminé' }[status] || '';
       return `
         <div class="match-card">
           <div class="match-header">
             <div class="match-info">
-              <div class="date-info">
-                <span>📅</span>
-                <span>${formatDate(match.date)}</span>
-              </div>
+              <div class="date-info"><span>📅</span><span> ${formatDate(match.date)}</span></div>
               <div class="time-venue">
-                <div class="time-info">
-                  <span>🕐</span>
-                  <span>${match.heure}</span>
-                </div>
-                <div class="venue-info">
-                  <span>📍</span>
-                  <span>${match.terrain}</span>
-                </div>
+                <div class="time-info"><span>🕐</span><span> ${match.heure}</span></div>
+                <div class="venue-info"><span>📍</span><span> ${match.terrain}</span></div>
               </div>
             </div>
           </div>
@@ -396,53 +199,33 @@
             <div class="teams-container">
               <div class="team team-1">
                 <div class="team-logo">
-                    ${match.equipe1Logo
-                    ? `<img src="${match.equipe1Logo}" alt="${match.equipe1}" width="36" height="36" loading="lazy">`
-                    : '⚽'}
+                  ${match.equipe1Logo ? `<img src="${match.equipe1Logo}" alt="${match.equipe1}" width="36" height="36" loading="lazy">` : '⚽'}
                 </div>
                 <div class="team-name">${match.equipe1}</div>
               </div>
               <div class="score-section">
-                ${status === 'SCHEDULED' ? `
-                    <div class="score-display">
-                        <span class="score pending">- - -</span>
-                    </div>
-                ` : `
-                    <div class="score-display">
-                        <span class="score">${result.team1Score}</span>
-                        <span class="separator">-</span>
-                        <span class="score">${result.team2Score}</span>
-                    </div>
-                `}
+                ${status === 'SCHEDULED'
+                  ? `<div class="score-display"><span class="score pending">- - -</span></div>`
+                  : `<div class="score-display"><span class="score">${result.team1Score}</span><span class="separator">-</span><span class="score">${result.team2Score}</span></div>`}
               </div>
               <div class="team team-2">
                 <div class="team-logo">
-                    ${match.equipe2Logo
-                    ? `<img src="${match.equipe2Logo}" alt="${match.equipe2}" width="36" height="36" loading="lazy">`
-                    : '⚽'}
+                  ${match.equipe2Logo ? `<img src="${match.equipe2Logo}" alt="${match.equipe2}" width="36" height="36" loading="lazy">` : '⚽'}
                 </div>
                 <div class="team-name">${match.equipe2}</div>
               </div>
             </div>
-            ${status !== 'SCHEDULED' ? `
-              <div class="status-container">
-                <span class="status-badge status-${status.toLowerCase()}">
-                  ${statusText}
-                </span>
-              </div>
-            ` : ''}
+            ${status !== 'SCHEDULED' ? `<div class="status-container"><span class="status-badge status-${status.toLowerCase()}">${statusText}</span></div>` : ``}
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function renderWidget() {
       const journees = Object.keys(currentMatchData).sort((a, b) => Number(a) - Number(b));
-      let currentMatches = currentMatchData[selectedJournee] || [];
-      currentMatches = currentMatches.sort((a, b) => {
-          const ordreA = a.ordreDate ?? Number.MAX_SAFE_INTEGER;
-          const ordreB = b.ordreDate ?? Number.MAX_SAFE_INTEGER;
-          return ordreA - ordreB;
+      let currentMatches = (currentMatchData[selectedJournee] || []).slice().sort((a, b) => {
+        const ordreA = a.ordreDate ?? Number.MAX_SAFE_INTEGER;
+        const ordreB = b.ordreDate ?? Number.MAX_SAFE_INTEGER;
+        return ordreA - ordreB;
       });
 
       const content = `
@@ -452,37 +235,41 @@
             ${journees.map(j => {
               const first = (currentMatchData[j] && currentMatchData[j][0]) || {};
               const label = first.date ? formatDate(first.date) : `Journée ${j}`;
-              return `
-                <button 
-                  class="journee-btn ${selectedJournee === j ? 'active' : ''}"
-                  onclick="selectJournee('${j}')"
-                >
-                  ${label}
-                </button>`;
+              return `<button class="journee-btn ${selectedJournee === j ? 'active' : ''}" onclick="selectJournee('${j}')">${label}</button>`;
             }).join('')}
           </div>
         </div>
         <div class="matches-container">
-          ${currentMatches.length > 0 ? 
-            currentMatches.map(match => createMatchCard(match)).join('') :
-            `<div class="no-matches">
-              <div class="no-matches-icon">⚽</div>
-              <h3>Aucun match programmé</h3>
-              <p>Revenez plus tard pour voir les prochains matchs.</p>
-            </div>`
+          ${currentMatches.length > 0
+            ? currentMatches.map(match => createMatchCard(match)).join('')
+            : `<div class="no-matches"><div class="no-matches-icon">⚽</div><h3>Aucun match programmé</h3><p>Revenez plus tard pour voir les prochains matchs.</p></div>`
           }
         </div>
       `;
-
       document.getElementById('widget-content').innerHTML = content;
     }
 
-    function updateMatchData(data) {
-      currentMatchData = data;
-      const journees = Object.keys(data).sort((a, b) => Number(a) - Number(b));
-      if (journees.length > 0) {
-        selectedJournee = journees[0];
+    function updateMatchData(bundle) {
+      // bundle = { leagueId, leagueMeta, data }
+      currentMatchData = bundle.data || {};
+      // choose first journee by default
+      const journees = Object.keys(currentMatchData).sort((a, b) => Number(a) - Number(b));
+      if (journees.length) selectedJournee = journees[0];
+
+      // Update header
+      if (bundle.leagueMeta) {
+        const { label, div } = bundle.leagueMeta;
+        document.getElementById('leagueTitle').textContent = `${div || label || 'Ligue'} 2025`;
+        document.getElementById('leagueSub').textContent = 'Calendrier et résultats';
       }
+
+      // Sync dropdown selection, if present
+      if (bundle.leagueId) {
+        currentLeagueId = bundle.leagueId;
+        const sel = document.getElementById('leagueSelect');
+        if (sel && currentLeagueId) sel.value = currentLeagueId;
+      }
+
       renderWidget();
     }
 
@@ -490,13 +277,20 @@
       selectedJournee = journee;
       renderWidget();
     }
-
     window.selectJournee = selectJournee;
 
-    // Listen for Wix postMessage
+    // Receive messages from Wix
     window.addEventListener('message', function(event) {
-      if (event.data && typeof event.data === 'object' && event.data.type === 'SET_MATCH_DATA') {
-        updateMatchData(event.data.payload);
+      const msg = event.data || {};
+      if (msg.type === 'INIT_LEAGUES' && Array.isArray(msg.payload)) {
+        leagues = msg.payload.slice();
+        populateLeagueDropdown();
+        // If we have a selection, ask for it; else default to first
+        const desired = currentLeagueId || (leagues[0] && leagues[0].id);
+        if (desired) postToParent({ type: 'SELECT_LEAGUE', leagueId: desired });
+      }
+      if (msg.type === 'SET_MATCH_DATA' && msg.payload) {
+        updateMatchData(msg.payload);
       }
     }, false);
   </script>
